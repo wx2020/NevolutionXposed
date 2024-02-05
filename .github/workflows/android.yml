@@ -8,9 +8,7 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v3
     - name: set up JDK 11
@@ -19,8 +17,21 @@ jobs:
         java-version: '11'
         distribution: 'temurin'
         cache: gradle
-
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-    - name: Build with Gradle
-      run: ./gradlew build
+    - uses: gradle/gradle-build-action@v2
+      with:
+        gradle-version: current
+        arguments: assembleRelease
+    - uses: r0adkll/sign-android-release@v1
+      id: sign_app
+      with:
+        releaseDirectory: app/build/outputs/apk/release
+        signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+        alias: ${{ secrets.ALIAS }}
+        keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+        keyPassword: ${{ secrets.KEY_PASSWORD }}
+    - run: mv ${{steps.sign_app.outputs.signedReleaseFile}} NevolutionXposed_$GITHUB_REF_NAME.apk
+    - uses: ncipollo/release-action@v1
+      with:
+        artifacts: "*.apk"
+        token: ${{ github.token }}
+        generateReleaseNotes: true
