@@ -39,19 +39,16 @@ class Channels {
 
 fun Notification.setChannelId(value: String) { this.set("mChannelId", value) }
 
+@RequiresApi(api = 26)
 fun NotificationChannel.clone(id: String, name: String): NotificationChannel {
-	if (Build.VERSION.SDK_INT >= 26) {
-		val clone = NotificationChannel(id, name, this.importance)
-		clone.group = this.group
-		clone.description = this.description
-		clone.lockscreenVisibility = this.lockscreenVisibility
-		clone.setSound(this.sound ?: Settings.System.DEFAULT_NOTIFICATION_URI, this.audioAttributes)
-		clone.setBypassDnd(this.canBypassDnd())
-		clone.lightColor = this.lightColor
-		clone.setShowBadge(this.canShowBadge())
-		clone.vibrationPattern = this.vibrationPattern
-		return clone
-	} else {
-		return null
-	}
+	val clone = NotificationChannel(id, name, this.importance)
+	clone.group = this.group
+	clone.description = this.description
+	clone.lockscreenVisibility = this.lockscreenVisibility
+	clone.setSound(this.sound ?: Settings.System.DEFAULT_NOTIFICATION_URI, this.audioAttributes)
+	clone.setBypassDnd(this.canBypassDnd())
+	clone.lightColor = this.lightColor
+	clone.setShowBadge(this.canShowBadge())
+	clone.vibrationPattern = this.vibrationPattern
+	return clone
 }
