@@ -45,9 +45,6 @@ import androidx.core.app.NotificationCompat.MessagingStyle;
 import androidx.core.graphics.drawable.IconCompat;
 
 import static android.os.Build.VERSION.SDK_INT;
-import static android.os.Build.VERSION_CODES.N;
-import static android.os.Build.VERSION_CODES.O;
-import static android.os.Build.VERSION_CODES.P;
 
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedBridge;
@@ -262,7 +259,7 @@ public class WeChatDecorator extends NevoDecoratorService {
 			if (extras.containsKey(EXTRA_PICTURE_PATH)) {
 				String path = extras.getString(EXTRA_PICTURE_PATH);
 				final BitmapFactory.Options options = new BitmapFactory.Options();
-				options.inPreferredConfig = SDK_INT >= O ? Bitmap.Config.HARDWARE : Bitmap.Config.ARGB_8888;
+				options.inPreferredConfig = SDK_INT >= VERSION_CODES.O ? Bitmap.Config.HARDWARE : Bitmap.Config.ARGB_8888;
 				extras.putString(Notification.EXTRA_TEMPLATE, TEMPLATE_BIG_PICTURE);
 				extras.putParcelable(Notification.EXTRA_PICTURE, BitmapFactory.decodeFile(path, options));
 				// extras.putCharSequence(Notification.EXTRA_SUMMARY_TEXT, text);

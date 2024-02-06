@@ -4,7 +4,8 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.provider.Settings
-import android.os.Build
+import android.os.Build.VERSION.SDK_INT
+import android.os.Build.VERSION_CODES
 import android.util.Log
 import androidx.annotation.RequiresApi
 
@@ -13,17 +14,16 @@ import notxx.xposed.set
 private const val TAG = "WeChat.Channels"
 
 class Channels {
+	@RequiresApi(api = VERSION_CODES.O)
 	fun init(nm: NotificationManager) {
-		if (Build.VERSION.SDK_INT >= 26) {
-			val channel = nm.getNotificationChannel(CHANNEL_NEW_MESSAGE)
-			val channelGM = nm.getNotificationChannel(CHANNEL_GROUP_MESSAGE)
-			if (channelGM == null) {
-				nm.createNotificationChannel(channel.clone(CHANNEL_GROUP_MESSAGE, "群消息通知"))
-			}
-			val channelPM = nm.getNotificationChannel(CHANNEL_PRIVATE_MESSAGE)
-			if (channelPM == null) {
-				nm.createNotificationChannel(channel.clone(CHANNEL_PRIVATE_MESSAGE, "私聊消息通知"))
-			}
+		val channel = nm.getNotificationChannel(CHANNEL_NEW_MESSAGE)
+		val channelGM = nm.getNotificationChannel(CHANNEL_GROUP_MESSAGE)
+		if (channelGM == null) {
+			nm.createNotificationChannel(channel.clone(CHANNEL_GROUP_MESSAGE, "群消息通知"))
+		}
+		val channelPM = nm.getNotificationChannel(CHANNEL_PRIVATE_MESSAGE)
+		if (channelPM == null) {
+			nm.createNotificationChannel(channel.clone(CHANNEL_PRIVATE_MESSAGE, "私聊消息通知"))
 		}
 	}
 
@@ -40,7 +40,7 @@ class Channels {
 
 fun Notification.setChannelId(value: String) { this.set("mChannelId", value) }
 
-@RequiresApi(api = 26)
+@RequiresApi(api = VERSION_CODES.O)
 fun NotificationChannel.clone(id: String, name: String): NotificationChannel {
 	val clone = NotificationChannel(id, name, this.importance)
 	clone.group = this.group

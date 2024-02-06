@@ -15,6 +15,7 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
 import android.provider.ContactsContract.Contacts;
 import android.provider.ContactsContract.Profile;
@@ -43,9 +44,6 @@ import static android.app.Notification.EXTRA_REMOTE_INPUT_HISTORY;
 import static android.app.Notification.EXTRA_TEXT;
 import static android.app.PendingIntent.FLAG_UPDATE_CURRENT;
 import static android.os.Build.VERSION.SDK_INT;
-import static android.os.Build.VERSION_CODES.N;
-import static android.os.Build.VERSION_CODES.O;
-import static android.os.Build.VERSION_CODES.P;
 import static androidx.core.app.NotificationCompat.EXTRA_CONVERSATION_TITLE;
 import static androidx.core.app.NotificationCompat.EXTRA_IS_GROUP_CONVERSATION;
 import static androidx.core.app.NotificationCompat.EXTRA_MESSAGES;
@@ -193,7 +191,7 @@ class MessagingBuilder {
 		final List<Action> actions = new ArrayList<>();
 		// 回复
 		final RemoteInput remote_input;
-		if (SDK_INT >= N && on_reply != null && (remote_input = convs.getRemoteInput()) != null) {
+		if (SDK_INT >= VERSION_CODES.N && on_reply != null && (remote_input = convs.getRemoteInput()) != null) {
 			final CharSequence[] input_history = n.extras.getCharSequenceArray(EXTRA_REMOTE_INPUT_HISTORY);
 			final PendingIntent proxy = proxyDirectReply(id, n, on_reply, remote_input, input_history, null);
 			final RemoteInput.Builder reply_remote_input = new RemoteInput.Builder(remote_input.getResultKey()).addExtras(remote_input.getExtras())
@@ -203,7 +201,7 @@ class MessagingBuilder {
 
 			final Action.Builder reply_action = new Action.Builder(null, actionReply, proxy)
 					.addRemoteInput(reply_remote_input.build()).setAllowGeneratedReplies(true);
-			if (SDK_INT >= P) reply_action.setSemanticAction(Action.SEMANTIC_ACTION_REPLY);
+			if (SDK_INT >= VERSION_CODES.P) reply_action.setSemanticAction(Action.SEMANTIC_ACTION_REPLY);
 			actions.add(reply_action.build());
 		}
 		// 放大
@@ -274,7 +272,7 @@ class MessagingBuilder {
 				.putExtra(EXTRA_REPLY_ACTION, on_reply).putExtra(EXTRA_RESULT_KEY, remote_input.getResultKey())
 				.setData(Uri.fromParts(SCHEME_ID, Integer.toString(id), null));
 		if (mention_prefix != null) proxy.putExtra(EXTRA_REPLY_PREFIX, mention_prefix);
-		if (SDK_INT >= N && input_history != null)
+		if (SDK_INT >= VERSION_CODES.N && input_history != null)
 			proxy.putCharSequenceArrayListExtra(EXTRA_REMOTE_INPUT_HISTORY, new ArrayList<>(Arrays.asList(input_history)));
 		return PendingIntent.getBroadcast(mContext, 0, proxy.setPackage(mContext.getPackageName()), FLAG_UPDATE_CURRENT);
 	}
@@ -291,7 +289,7 @@ class MessagingBuilder {
 			results.putCharSequence(result_key, text);
 			RemoteInput.addResultsToIntent(new RemoteInput[]{ new RemoteInput.Builder(result_key).build() }, proxy_intent, results);
 		} else text = input;
-		final ArrayList<CharSequence> input_history = SDK_INT >= N ? proxy_intent.getCharSequenceArrayListExtra(EXTRA_REMOTE_INPUT_HISTORY) : null;
+		final ArrayList<CharSequence> input_history = SDK_INT >= VERSION_CODES.N ? proxy_intent.getCharSequenceArrayListExtra(EXTRA_REMOTE_INPUT_HISTORY) : null;
 		final String part = data.getSchemeSpecificPart();
 		try {
 			final Intent input_data = addTargetPackageAndWakeUp(reply_action);
@@ -299,7 +297,7 @@ class MessagingBuilder {
 
 			reply_action.send(mContext, 0, input_data, (pendingIntent, intent, _result_code, _result_data, _result_extras) -> {
 				if (BuildConfig.DEBUG) Log.d(TAG, "Reply sent: " + intent.toUri(0));
-				if (SDK_INT >= N) {
+				if (SDK_INT >= VERSION_CODES.N) {
 					final CharSequence[] inputs;
 					if (input_history != null) {
 						input_history.add(0, text);
@@ -330,7 +328,7 @@ class MessagingBuilder {
 			if (TEMPLATE_MESSAGING.equals(extras.getString(Notification.EXTRA_TEMPLATE))) {
 				final String path = extras.getString(WeChatDecorator.EXTRA_PICTURE_PATH);
 				final BitmapFactory.Options options = new BitmapFactory.Options();
-				options.inPreferredConfig = SDK_INT >= O ? Bitmap.Config.HARDWARE : Bitmap.Config.ARGB_8888;
+				options.inPreferredConfig = SDK_INT >= VERSION_CODES.O ? Bitmap.Config.HARDWARE : Bitmap.Config.ARGB_8888;
 				// extras.putString(Notification.EXTRA_TEMPLATE, TEMPLATE_BIG_PICTURE);
 				extras.putParcelable(Notification.EXTRA_PICTURE, BitmapFactory.decodeFile(path, options));
 				// extras.putCharSequence(Notification.EXTRA_SUMMARY_TEXT, text);
@@ -362,7 +360,7 @@ class MessagingBuilder {
 		final Person user = messaging.getUser();
 		if (user != null) {
 			extras.putCharSequence(EXTRA_SELF_DISPLAY_NAME, user.getName());
-			if (SDK_INT >= P) extras.putParcelable(Notification.EXTRA_MESSAGING_PERSON, toAndroidPerson(user));	// Not included in NotificationCompat
+			if (SDK_INT >= VERSION_CODES.P) extras.putParcelable(Notification.EXTRA_MESSAGING_PERSON, toAndroidPerson(user));	// Not included in NotificationCompat
 		}
 		if (messaging.getConversationTitle() != null) extras.putCharSequence(EXTRA_CONVERSATION_TITLE, messaging.getConversationTitle());
 		final List<Message> messages = messaging.getMessages();
@@ -387,11 +385,11 @@ class MessagingBuilder {
 		final Person sender = message.getPerson();
 		if (sender != null) {
 			bundle.putCharSequence(KEY_SENDER, sender.getName());	// Legacy listeners need this
-			if (SDK_INT >= P) bundle.putParcelable(KEY_SENDER_PERSON, toAndroidPerson(sender));
+			if (SDK_INT >= VERSION_CODES.P) bundle.putParcelable(KEY_SENDER_PERSON, toAndroidPerson(sender));
 		}
 		if (message.getDataMimeType() != null) bundle.putString(KEY_DATA_MIME_TYPE, message.getDataMimeType());
 		if (message.getDataUri() != null) bundle.putParcelable(KEY_DATA_URI, message.getDataUri());
-		if (SDK_INT >= O && ! message.getExtras().isEmpty()) bundle.putBundle(KEY_EXTRAS_BUNDLE, message.getExtras());
+		if (SDK_INT >= VERSION_CODES.O && ! message.getExtras().isEmpty()) bundle.putBundle(KEY_EXTRAS_BUNDLE, message.getExtras());
 		//if (message.isRemoteInputHistory()) bundle.putBoolean(KEY_REMOTE_INPUT_HISTORY, message.isRemoteInputHistory());
 		return bundle;
 	}

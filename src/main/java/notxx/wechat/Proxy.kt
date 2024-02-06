@@ -15,9 +15,7 @@ import android.content.pm.PackageManager
 import android.graphics.drawable.Icon
 import android.net.Uri
 import android.os.Build.VERSION.SDK_INT
-import android.os.Build.VERSION_CODES.N
-import android.os.Build.VERSION_CODES.O
-import android.os.Build.VERSION_CODES.P
+import android.os.Build.VERSION_CODES
 import android.util.Log
 
 import com.oasisfeng.nevo.xposed.BuildConfig
@@ -64,7 +62,7 @@ class Proxy {
 		// n.deleteIntent = read
 		actions.add(buildReadAction(id, read))
 		val remoteInput = c.remoteInput
-		if (SDK_INT >= N && remoteInput != null) {
+		if (SDK_INT >= VERSION_CODES.N && remoteInput != null) {
 			actions.add(buildReplyAction(id, n, c))
 		}
 	}
@@ -89,7 +87,7 @@ class Proxy {
 
 			readAction.send(applicationContext, 0, inputData, { _, intent, _, _, _ ->
 				// Log.d(TAG, "Read sent: ${intent}");
-				if (SDK_INT >= N) {
+				if (SDK_INT >= VERSION_CODES.N) {
 					val id = Integer.parseInt(part);
 					cancel(id)
 					// markRead(id) TODO
@@ -108,7 +106,7 @@ class Proxy {
 		val data = replyIntent.getData(); val results = RemoteInput.getResultsFromIntent(replyIntent)
 		val input = results?.getCharSequence(resultKey)
 		if (data == null || replyAction == null || resultKey == null || input == null) return; // Should never happen
-		val inputHistory = if (SDK_INT >= N) { replyIntent.getCharSequenceArrayListExtra(EXTRA_REMOTE_INPUT_HISTORY) } else { null }
+		val inputHistory = if (SDK_INT >= VERSION_CODES.N) { replyIntent.getCharSequenceArrayListExtra(EXTRA_REMOTE_INPUT_HISTORY) } else { null }
 		val part = data.getSchemeSpecificPart()
 		try {
 			// Log.d(TAG, "replyAction: $replyAction")
@@ -117,7 +115,7 @@ class Proxy {
 
 			replyAction.send(applicationContext, 0, inputData, { _, intent, _, _, _ ->
 				// Log.d(TAG, "Reply sent: ${intent}");
-				if (SDK_INT >= N) {
+				if (SDK_INT >= VERSION_CODES.N) {
 					val inputs = if (inputHistory != null) {
 						inputHistory.add(input);
 						inputHistory.toTypedArray()
@@ -151,7 +149,7 @@ class Proxy {
 			.setData(Uri.fromParts(SCHEME_ID, Integer.toString(id), null))
 			.setPackage(applicationContext.packageName)
 		val inputHistory = n.remoteInputHistory
-		if (SDK_INT >= N && inputHistory != null) {
+		if (SDK_INT >= VERSION_CODES.N && inputHistory != null) {
 			reply.putCharSequenceArrayListExtra(EXTRA_REMOTE_INPUT_HISTORY, inputHistory.toCollection(ArrayList()))
 		}
 		val proxy = PendingIntent.getBroadcast(applicationContext, 0, reply, FLAG_UPDATE_CURRENT)
@@ -161,7 +159,7 @@ class Proxy {
 
 		val action = Action.Builder(null, "回复", proxy).addRemoteInput(proxyInput.build()) // TODO
 			.setAllowGeneratedReplies(true)
-		if (SDK_INT >= P) action.setSemanticAction(Action.SEMANTIC_ACTION_REPLY)
+		if (SDK_INT >= VERSION_CODES.P) action.setSemanticAction(Action.SEMANTIC_ACTION_REPLY)
 		return action.build()
 	}
 }

@@ -1,7 +1,7 @@
 package com.oasisfeng.nevo.decorators.wechat;
 
+import android.os.Build.VERSION_CODES;
 import static android.os.Build.VERSION.SDK_INT;
-import static android.os.Build.VERSION_CODES.O_MR1;
 
 /**
  * Static map for WeChat Emoji markers
@@ -77,7 +77,7 @@ public class EmojiMap {
 			{ "捂脸",		"Facepalm",		"🤦" },
 			{ "奸笑",		"Smirk",		"😏" },
 			{ "皱眉",		"Concerned",	"😟" },
-			{ "红包",		"Packet",		SDK_INT > O_MR1 ? "🧧"/* Emoji 11+ */: "💰" },
+			{ "红包",		"Packet",		SDK_INT > VERSION_CODES.O_MR1 ? "🧧"/* Emoji 11+ */: "💰" },
 			{ "小狗",		"Pup",			"🐶" },
 			{ "再见",		"Bye",			"🙋" },
 			{ "擦汗",		"Relief",		"😥" },

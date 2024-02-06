@@ -11,9 +11,7 @@ import android.app.Notification.EXTRA_TEMPLATE
 import android.app.Person
 import android.os.Bundle
 import android.os.Build.VERSION.SDK_INT
-import android.os.Build.VERSION_CODES.N
-import android.os.Build.VERSION_CODES.O
-import android.os.Build.VERSION_CODES.P
+import android.os.Build.VERSION_CODES
 import android.os.Parcelable
 import android.text.SpannableString
 import android.util.Log
@@ -119,7 +117,7 @@ class Messages {
 		@Suppress("DEPRECATION")
 		extras.putCharSequence(EXTRA_SELF_DISPLAY_NAME, participant.name)
 		// Log.d(TAG, "participantPerson $participantPerson ${participantPerson.name}")
-		if (SDK_INT >= P) extras.putParcelable(Notification.EXTRA_MESSAGING_PERSON, participant); // Not included in NotificationCompat
+		if (SDK_INT >= VERSION_CODES.P) extras.putParcelable(Notification.EXTRA_MESSAGING_PERSON, participant); // Not included in NotificationCompat
 		extras.putCharSequence(EXTRA_CONVERSATION_TITLE, participant.name);
 		// Log.d(TAG, "thread ${thread.size}")
 		if (!thread.isEmpty()) extras.putParcelableArray(EXTRA_MESSAGES, thread.toParcelableArray(lines))
@@ -293,11 +291,11 @@ class Crumb {
 		bundle.putLong(KEY_TIMESTAMP, timestamp)		// Must be included even for 0
 		if (senderName != null) bundle.putCharSequence(KEY_SENDER, senderName)	// Legacy listeners need this
 		// Log.d(TAG, "senderPerson $senderPerson $senderName")
-		if (SDK_INT >= P && senderPerson != null) bundle.putParcelable(KEY_SENDER_PERSON, senderPerson)
+		if (SDK_INT >= VERSION_CODES.P && senderPerson != null) bundle.putParcelable(KEY_SENDER_PERSON, senderPerson)
 		if (dataMimeType != null) bundle.putString(KEY_DATA_MIME_TYPE, dataMimeType)
 		if (dataUri != null) bundle.putParcelable(KEY_DATA_URI, dataUri)
-		// if (SDK_INT >= O && !extras.isEmpty()) bundle.putBundle(KEY_EXTRAS_BUNDLE, extras)
-		//if (this.isRemoteInputHistory()) bundle.putBoolean(KEY_REMOTE_INPUT_HISTORY, this.isRemoteInputHistory());
+		// if (SDK_INT >= VERSION_CODES.O && !extras.isEmpty()) bundle.putBundle(KEY_EXTRAS_BUNDLE, extras)
+		// if (this.isRemoteInputHistory()) bundle.putBoolean(KEY_REMOTE_INPUT_HISTORY, this.isRemoteInputHistory());
 		output.add(bundle)
 		remoteInputHistory?.forEach { text ->
 			val bundle = Bundle()
