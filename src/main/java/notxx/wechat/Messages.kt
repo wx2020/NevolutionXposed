@@ -17,6 +17,8 @@ import android.text.SpannableString
 import android.util.Log
 import android.util.LruCache
 
+import androidx.annotation.RequiresApi
+
 import java.util.SortedMap
 
 private const val TAG = "WeChat.Messages"
