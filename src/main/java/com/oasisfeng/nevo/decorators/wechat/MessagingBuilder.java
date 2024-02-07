@@ -78,7 +78,7 @@ class MessagingBuilder {
 	private static final String KEY_TEXT = "text";
 	private static final String KEY_TIMESTAMP = "time";
 	private static final String KEY_SENDER = "sender";
-	@RequiresApi(P) private static final String KEY_SENDER_PERSON = "sender_person";
+	@RequiresApi(VERSION_CODES.P) private static final String KEY_SENDER_PERSON = "sender_person";
 	private static final String KEY_DATA_MIME_TYPE = "type";
 	private static final String KEY_DATA_URI= "uri";
 	private static final String KEY_EXTRAS_BUNDLE = "extras";
@@ -394,7 +394,7 @@ class MessagingBuilder {
 		return bundle;
 	}
 
-	@RequiresApi(P) @SuppressLint("RestrictedApi") private static android.app.Person toAndroidPerson(final Person user) {
+	@RequiresApi(VERSION_CODES.P) @SuppressLint("RestrictedApi") private static android.app.Person toAndroidPerson(final Person user) {
 		return user.toAndroidPerson();
 	}
 

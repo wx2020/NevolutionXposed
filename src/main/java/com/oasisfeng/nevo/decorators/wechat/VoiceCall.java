@@ -2,6 +2,7 @@ package com.oasisfeng.nevo.decorators.wechat;
 
 import android.app.Notification;
 import android.content.Context;
+import android.os.Build.VERSION_CODES;
 
 import static android.os.Build.VERSION.SDK_INT;
 
