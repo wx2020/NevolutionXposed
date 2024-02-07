@@ -13,7 +13,7 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 import com.oasisfeng.nevo.xposed.BuildConfig;
 
 public class HookForBroadcastReceiver {
-	private static final String TAG = "WeChatDecorator.HookForBroadcastReceiver";
+	private static final String TAG = "WeChat.HFBR";
 
 	public static void hook(final XC_LoadPackage.LoadPackageParam loadPackageParam) {
 		XposedBridge.hookAllConstructors(BroadcastReceiver.class, new XC_MethodHook() {
