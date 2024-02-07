@@ -28,6 +28,10 @@ apply plugin: 'kotlin-android-extensions'
 android {
 	compileSdkVersion 28
 
+	lintOptions{
+		disable 'MissingTranslation'
+	}
+
 	defaultConfig {
 		minSdkVersion 23
 		targetSdkVersion 26
