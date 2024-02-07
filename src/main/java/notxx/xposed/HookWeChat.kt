@@ -101,7 +101,8 @@ object HookWeChat {
 		if (!nmRef.compareAndSet(null, nm)) return
 		Log.d(TAG, "init($nm)")
 		// 维护会话渠道
-		channels.init(nm)
+		if (SDK_INT >= VERSION_CODES.O) 
+			channels.init(nm)
 	}
 
 	private fun process(tag: String?, id: Int, n: Notification) {

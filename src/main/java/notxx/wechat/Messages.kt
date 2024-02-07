@@ -101,6 +101,7 @@ class Messages {
 		// Log.d(TAG, "unread: ${n.number} type: ${n.type} person: ${n.person} content: ${n.content}")
 	}
 
+	@RequiresApi(VERSION_CODES.P)
 	private fun find_person(key: String,
 			fail: PersonPredicate = { false },
 			build: PersonBuilder? = { Person.Builder().setName(key).build() }): Person {
@@ -113,6 +114,7 @@ class Messages {
 		return person
 	}
 
+	@RequiresApi(VERSION_CODES.P)
 	private fun export_conversation(extras: Bundle, participant: Person, thread: List<Crumb>, lines: List<Line>) {
 		@Suppress("DEPRECATION")
 		extras.putCharSequence(EXTRA_SELF_DISPLAY_NAME, participant.name)
@@ -155,10 +157,12 @@ class Messages {
 		}
 		Log.d(TAG, "recast(...) ${crumb.senderName} ${crumb.content}")
 		val participant = c.participant
-		val participantPerson = find_person(participant, { it?.icon == null }, {
-			Person.Builder().setIcon(n.getLargeIcon()).setName(participant).build()
-		})
-		export_conversation(n.extras, participantPerson, thread, lines)
+		if (SDK_INT >= VERSION_CODES.P) { // TODO
+			val participantPerson = find_person(participant, { it?.icon == null }, {
+				Person.Builder().setIcon(n.getLargeIcon()).setName(participant).build()
+			})
+			export_conversation(n.extras, participantPerson, thread, lines)
+		}
 	}
 
 	fun process(id: Int, n: Notification) {
@@ -173,9 +177,6 @@ class Messages {
 		val timestamp = c.latestTimestamp
 		// Log.d(TAG, "c.participant ${c.participant}")
 		val participant = c.participant
-		val participantPerson = find_person(participant, { it?.icon == null }, {
-			Person.Builder().setIcon(n.getLargeIcon()).setName(participant).build()
-		})
 		var thread = threadCache.get(id)
 		if (thread == null) {
 			thread = mutableListOf<Crumb>()
@@ -235,7 +236,12 @@ class Messages {
 		}
 		while (thread.size > THREAD_MAX) thread.removeAt(0)
 		// Log.d(TAG, "counts@2: ${messages.size}, ${thread.size}")
-		export_conversation(n.extras, participantPerson, thread, lines)
+		if (SDK_INT >= VERSION_CODES.P) { // TODO
+			val participantPerson = find_person(participant, { it?.icon == null }, {
+				Person.Builder().setIcon(n.getLargeIcon()).setName(participant).build()
+			})
+			export_conversation(n.extras, participantPerson, thread, lines)
+		}
 		n.text = n.tickerText // TODO
 	}
 }
