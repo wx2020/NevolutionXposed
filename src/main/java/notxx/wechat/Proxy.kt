@@ -158,8 +158,10 @@ class Proxy {
 		if (conversation.participant != null) proxyInput.setLabel(conversation.participant)
 
 		val action = Action.Builder(null, "回复", proxy).addRemoteInput(proxyInput.build()) // TODO
-			.setAllowGeneratedReplies(true)
-		if (SDK_INT >= VERSION_CODES.P) action.setSemanticAction(Action.SEMANTIC_ACTION_REPLY)
+		if (SDK_INT >= VERSION_CODES.N) {
+			action.setAllowGeneratedReplies(true)
+			if (SDK_INT >= VERSION_CODES.P) action.setSemanticAction(Action.SEMANTIC_ACTION_REPLY)
+		}
 		return action.build()
 	}
 }

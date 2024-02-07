@@ -229,7 +229,8 @@ class Messages {
 			var crumb = Crumb(timestamp, n)
 			thread.add(crumb) // 添加历史记录
 			// Log.d(TAG, "add(...) ${crumb.senderName} ${crumb.content}")
-			crumb.senderPerson = find_person(last_line.first ?: participant)
+			if (SDK_INT >= VERSION_CODES.P) // TODO
+				crumb.senderPerson = find_person(last_line.first ?: participant)
 			if (last_line.second != "[消息]") {
 				crumb.content = last_line.second
 			}

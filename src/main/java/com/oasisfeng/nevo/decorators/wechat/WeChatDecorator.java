@@ -195,7 +195,7 @@ public class WeChatDecorator extends NevoDecoratorService {
 						// 撤回
 						// Log.d(TAG, matcher.group(0) + ", " + matcher.group(1) + ", " + matcher.group(2) + ", " + matcher.group(3));
 						is_recall = true;
-						recaller = matcher.group("recaller");
+						recaller = (SDK_INT >= VERSION_CODES.O) ? matcher.group("recaller") : matcher.group(2); // named group requires higher api level
 						extras.putBoolean(EXTRA_RECALL, true);
 						extras.putString(EXTRA_RECALLER, recaller);
 						if (BuildConfig.DEBUG) Log.d(TAG, "recaller " + recaller);
