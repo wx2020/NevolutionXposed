@@ -167,7 +167,7 @@ class Messages {
 		}
 	}
 
-	fun process(id: Int, n: Notification) {
+	fun process(_: Int, n: Notification) {
 		process_internal(n)
 	}
 
