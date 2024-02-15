@@ -2,13 +2,13 @@ name: Build and Release
 
 on:
   push:
-    branches: [ "TaiChi-build" ]
-  pull_request:
-    branches: [ "TaiChi-build" ]
+    tags: [ "v*" ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
