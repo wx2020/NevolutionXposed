@@ -22,10 +22,6 @@ jobs:
       uses: gradle/actions/setup-gradle@v3
     - name: Build
       run: ./gradlew build
-    - run: ls -lah
-    - name: Assemble Release Bundle
-      run: ./gradlew assembleRelease
-    - run: ls -lah
     - name: Sign apk
       uses: r0adkll/sign-android-release@v1
       id: sign_app
