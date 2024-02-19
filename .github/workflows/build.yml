@@ -42,11 +42,8 @@ jobs:
       with:
         name: NevolutionXposed_${{github.ref_name}}_${{github.sha}}.apk
         path: ${{steps.sign_app.outputs.signedReleaseFile}}
-    - run: ls -lah
-    - name: Download APK from build
-      uses: actions/download-artifact@v4
-      with:
-        name: NevolutionXposed_${{github.ref_name}}_${{github.sha}}.apk
+    - name: Prepare release
+      run: mv ${{steps.sign_app.outputs.signedReleaseFile}} NevolutionXposed_${{github.ref_name}}_${{github.sha}}.apk
     - run: ls -lah
   release:
     name: Release APK
