@@ -42,6 +42,11 @@ jobs:
       with:
         name: NevolutionXposed_${{github.ref_name}}_${{github.sha}}.apk
         path: ${{steps.sign_app.outputs.signedReleaseFile}}
+    - name: Download APK from build
+      uses: actions/download-artifact@v4
+      with:
+        name: NevolutionXposed_${{github.ref_name}}_${{github.sha}}.apk
+    - run: ls -R
   release:
     name: Release APK
     needs: build
@@ -50,10 +55,6 @@ jobs:
     permissions:
       contents: write
     steps:
-    - name: Download APK from build
-      uses: actions/download-artifact@v4
-      with:
-        name: NevolutionXposed_${{github.ref_name}}_${{github.sha}}.apk
     - name: Release apk
       uses: ncipollo/release-action@v1
       with:
