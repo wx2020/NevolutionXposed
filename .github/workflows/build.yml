@@ -43,12 +43,12 @@ jobs:
         name: NevolutionXposed_${{github.ref_name}}_${{github.sha}}.apk
         path: ${{steps.sign_app.outputs.signedReleaseFile}}
     - name: Prepare release
-      run: mv ${{steps.sign_app.outputs.signedReleaseFile}} NevolutionXposed_${{github.ref_name}}_${{github.sha}}.apk
+      run: mv ${{steps.sign_app.outputs.signedReleaseFile}} NevolutionXposed_${{github.ref_name}}.apk
     - run: ls -lah
     - name: Release apk
       if: startsWith(github.ref, 'refs/tags/v')
       uses: ncipollo/release-action@v1
       with:
-        artifacts: "NevolutionXposed_${{github.ref_name}}_${{github.sha}}.apk"
+        artifacts: "NevolutionXposed_${{github.ref_name}}.apk"
         token: ${{ github.token }}
         allowUpdates: true
