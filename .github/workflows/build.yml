@@ -46,6 +46,7 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         name: NevolutionXposed_${{github.ref_name}}_${{github.sha}}.apk
+        path: artifacts
     - run: ls -R
   release:
     name: Release APK
