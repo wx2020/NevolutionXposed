@@ -45,9 +45,8 @@ jobs:
     - name: Download APK from build
       uses: actions/download-artifact@v4
       with:
-        name: NevolutionXposed_${{github.ref_name}}_${{github.sha}}.apk
-        path: artifacts
-    - run: ls -R
+        name: NevolutionXposed_-_-_${{github.ref_name}}_${{github.sha}}.apk
+    - run: ls -lah
   release:
     name: Release APK
     needs: build
