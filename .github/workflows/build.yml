@@ -41,5 +41,5 @@ jobs:
     - name: Upload Release
       uses: actions/upload-artifact@v4
       with:
-        name: NevolutionXposed_$GITHUB_REF_NAME.apk
+        name: NevolutionXposed_${{github.ref_name}}.apk
         path: ${{steps.sign_app.outputs.signedReleaseFile}}
