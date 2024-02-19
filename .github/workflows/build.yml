@@ -37,10 +37,9 @@ jobs:
         BUILD_TOOLS_VERSION: "34.0.0"
     - name: Collect artifcat name
       run: |
-        mv ${{steps.sign_app.outputs.signedReleaseFile}} NevolutionXposed_$GITHUB_REF_NAME.apk
-        echo "release=NevolutionXposed_$GITHUB_REF_NAME.apk" >> $GITHUB_ENV
+        echo "mv ${{steps.sign_app.outputs.signedReleaseFile}} NevolutionXposed_$GITHUB_REF_NAME.apk"
     - name: Upload Release
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ env.release }}
-        path: NevolutionXposed
+        name: NevolutionXposed_$GITHUB_REF_NAME.apk
+        path: ${{steps.sign_app.outputs.signedReleaseFile}}
