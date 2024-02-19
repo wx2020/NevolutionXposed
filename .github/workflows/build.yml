@@ -50,12 +50,13 @@ jobs:
     permissions:
       contents: write
     steps:
-    - name: Collect artifcat name
-      run: |
-        mv ${{steps.sign_app.outputs.signedReleaseFile}} NevolutionXposed_${{github.ref_name}}_${{github.sha}}.apk
+    - name: Download APK from build
+      uses: actions/download-artifact@v4
+      with:
+        name: NevolutionXposed_${{github.ref_name}}_${{github.sha}}.apk
     - name: Release apk
       uses: ncipollo/release-action@v1
       with:
-        artifacts: "*.apk"
+        artifacts: "NevolutionXposed_${{github.ref_name}}_${{github.sha}}.apk"
         token: ${{ github.token }}
         allowUpdates: true
