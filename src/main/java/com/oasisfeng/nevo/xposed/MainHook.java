@@ -4,6 +4,7 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.ContextWrapper;
+import android.os.Build.VERSION_CODES;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.NotificationListenerService.RankingMap;
 import android.service.notification.StatusBarNotification;
@@ -36,6 +37,9 @@ import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.XSharedPreferences;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
+import static android.os.Build.VERSION.SDK_INT;
+
+
 /**
  * hook and manupinate notifications.
  * 
@@ -64,7 +68,7 @@ public class MainHook implements IXposedHookLoadPackage {
 				});
 			};
 			for (String method : methods) {
-				inspect.accept(method);
+				if (SDK_INT >= VERSION_CODES.O) inspect.accept(method);
 			}
 		} catch (XposedHelpers.ClassNotFoundError e) { /* XposedBridge.log("ContextImpl hook failed"); */ }
 	}
@@ -75,7 +79,7 @@ public class MainHook implements IXposedHookLoadPackage {
 			final Class<?> clazz = XposedHelpers.findClass(className, loadPackageParam.classLoader);
 			XposedBridge.log("inspect clazz: " + clazz + " " + loadPackageParam.packageName);
 			for (Consumer<Class<?>> then : thens) {
-				then.accept(clazz);
+				if (SDK_INT >= VERSION_CODES.O) then.accept(clazz);
 			}
 		} catch (XposedHelpers.ClassNotFoundError e) { /* XposedBridge.log("ContextImpl hook failed"); */ }
 	}

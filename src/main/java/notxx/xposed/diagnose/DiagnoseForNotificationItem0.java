@@ -10,7 +10,7 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 import notxx.xposed.Diagnose;
 
 public class DiagnoseForNotificationItem0 {
-	static final String TAG = "WeChatDecorator.Diagnose";
+	static final String TAG = "WeChat.Diagnose";
 
 	// 诊断钩子
 	public static void hook(XC_LoadPackage.LoadPackageParam loadPackageParam) {

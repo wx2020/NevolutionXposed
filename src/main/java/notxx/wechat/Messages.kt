@@ -11,13 +11,13 @@ import android.app.Notification.EXTRA_TEMPLATE
 import android.app.Person
 import android.os.Bundle
 import android.os.Build.VERSION.SDK_INT
-import android.os.Build.VERSION_CODES.N
-import android.os.Build.VERSION_CODES.O
-import android.os.Build.VERSION_CODES.P
+import android.os.Build.VERSION_CODES
 import android.os.Parcelable
 import android.text.SpannableString
 import android.util.Log
 import android.util.LruCache
+
+import androidx.annotation.RequiresApi
 
 import java.util.SortedMap
 
@@ -103,6 +103,7 @@ class Messages {
 		// Log.d(TAG, "unread: ${n.number} type: ${n.type} person: ${n.person} content: ${n.content}")
 	}
 
+	@RequiresApi(VERSION_CODES.P)
 	private fun find_person(key: String,
 			fail: PersonPredicate = { false },
 			build: PersonBuilder? = { Person.Builder().setName(key).build() }): Person {
@@ -115,11 +116,12 @@ class Messages {
 		return person
 	}
 
+	@RequiresApi(VERSION_CODES.P)
 	private fun export_conversation(extras: Bundle, participant: Person, thread: List<Crumb>, lines: List<Line>) {
 		@Suppress("DEPRECATION")
 		extras.putCharSequence(EXTRA_SELF_DISPLAY_NAME, participant.name)
 		// Log.d(TAG, "participantPerson $participantPerson ${participantPerson.name}")
-		if (SDK_INT >= P) extras.putParcelable(Notification.EXTRA_MESSAGING_PERSON, participant); // Not included in NotificationCompat
+		if (SDK_INT >= VERSION_CODES.P) extras.putParcelable(Notification.EXTRA_MESSAGING_PERSON, participant); // Not included in NotificationCompat
 		extras.putCharSequence(EXTRA_CONVERSATION_TITLE, participant.name);
 		// Log.d(TAG, "thread ${thread.size}")
 		if (!thread.isEmpty()) extras.putParcelableArray(EXTRA_MESSAGES, thread.toParcelableArray(lines))
@@ -157,10 +159,12 @@ class Messages {
 		}
 		Log.d(TAG, "recast(...) ${crumb.senderName} ${crumb.content}")
 		val participant = c.participant
-		val participantPerson = find_person(participant, { it?.icon == null }, {
-			Person.Builder().setIcon(n.getLargeIcon()).setName(participant).build()
-		})
-		export_conversation(n.extras, participantPerson, thread, lines)
+		if (SDK_INT >= VERSION_CODES.P) { // TODO
+			val participantPerson = find_person(participant, { it?.icon == null }, {
+				Person.Builder().setIcon(n.getLargeIcon()).setName(participant).build()
+			})
+			export_conversation(n.extras, participantPerson, thread, lines)
+		}
 	}
 
 	fun process(id: Int, n: Notification) {
@@ -175,9 +179,6 @@ class Messages {
 		val timestamp = c.latestTimestamp
 		// Log.d(TAG, "c.participant ${c.participant}")
 		val participant = c.participant
-		val participantPerson = find_person(participant, { it?.icon == null }, {
-			Person.Builder().setIcon(n.getLargeIcon()).setName(participant).build()
-		})
 		var thread = threadCache.get(id)
 		if (thread == null) {
 			thread = mutableListOf<Crumb>()
@@ -228,7 +229,8 @@ class Messages {
 			var crumb = Crumb(timestamp, n)
 			thread.add(crumb) // 添加历史记录
 			// Log.d(TAG, "add(...) ${crumb.senderName} ${crumb.content}")
-			crumb.senderPerson = find_person(last_line.first ?: participant)
+			if (SDK_INT >= VERSION_CODES.P) // TODO
+				crumb.senderPerson = find_person(last_line.first ?: participant)
 			if (last_line.second != "[消息]") {
 				crumb.content = last_line.second
 			}
@@ -237,7 +239,12 @@ class Messages {
 		}
 		while (thread.size > THREAD_MAX) thread.removeAt(0)
 		// Log.d(TAG, "counts@2: ${messages.size}, ${thread.size}")
-		export_conversation(n.extras, participantPerson, thread, lines)
+		if (SDK_INT >= VERSION_CODES.P) { // TODO
+			val participantPerson = find_person(participant, { it?.icon == null }, {
+				Person.Builder().setIcon(n.getLargeIcon()).setName(participant).build()
+			})
+			export_conversation(n.extras, participantPerson, thread, lines)
+		}
 		n.text = n.tickerText // TODO
 	}
 }
@@ -293,11 +300,11 @@ class Crumb {
 		bundle.putLong(KEY_TIMESTAMP, timestamp)		// Must be included even for 0
 		if (senderName != null) bundle.putCharSequence(KEY_SENDER, senderName)	// Legacy listeners need this
 		// Log.d(TAG, "senderPerson $senderPerson $senderName")
-		if (SDK_INT >= P && senderPerson != null) bundle.putParcelable(KEY_SENDER_PERSON, senderPerson)
+		if (SDK_INT >= VERSION_CODES.P && senderPerson != null) bundle.putParcelable(KEY_SENDER_PERSON, senderPerson)
 		if (dataMimeType != null) bundle.putString(KEY_DATA_MIME_TYPE, dataMimeType)
 		if (dataUri != null) bundle.putParcelable(KEY_DATA_URI, dataUri)
-		// if (SDK_INT >= O && !extras.isEmpty()) bundle.putBundle(KEY_EXTRAS_BUNDLE, extras)
-		//if (this.isRemoteInputHistory()) bundle.putBoolean(KEY_REMOTE_INPUT_HISTORY, this.isRemoteInputHistory());
+		// if (SDK_INT >= VERSION_CODES.O && !extras.isEmpty()) bundle.putBundle(KEY_EXTRAS_BUNDLE, extras)
+		// if (this.isRemoteInputHistory()) bundle.putBoolean(KEY_REMOTE_INPUT_HISTORY, this.isRemoteInputHistory());
 		output.add(bundle)
 		remoteInputHistory?.forEach { text ->
 			val bundle = Bundle()

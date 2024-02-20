@@ -2,9 +2,9 @@ package com.oasisfeng.nevo.decorators.wechat;
 
 import android.app.Notification;
 import android.content.Context;
+import android.os.Build.VERSION_CODES;
 
 import static android.os.Build.VERSION.SDK_INT;
-import static android.os.Build.VERSION_CODES.O;
 
 import com.oasisfeng.nevo.xposed.R;
 
@@ -29,7 +29,7 @@ class VoiceCall {
 
 	private static void tweak(final Notification n, final String text) {
 		n.category = Notification.CATEGORY_CALL;
-		if (SDK_INT >= O) n.extras.putBoolean(Notification.EXTRA_COLORIZED, true);
+		if (SDK_INT >= VERSION_CODES.O) n.extras.putBoolean(Notification.EXTRA_COLORIZED, true);
 
 		final int pos = text.lastIndexOf(' ');
 		final String[] parts;

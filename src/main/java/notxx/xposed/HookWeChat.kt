@@ -5,9 +5,7 @@ import android.app.Notification.Action
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.os.Build.VERSION.SDK_INT
-import android.os.Build.VERSION_CODES.N
-import android.os.Build.VERSION_CODES.O
-import android.os.Build.VERSION_CODES.P
+import android.os.Build.VERSION_CODES
 import android.content.Context
 import android.util.Log
 import android.util.LruCache
@@ -103,14 +101,16 @@ object HookWeChat {
 		if (!nmRef.compareAndSet(null, nm)) return
 		Log.d(TAG, "init($nm)")
 		// 维护会话渠道
-		channels.init(nm)
+		if (SDK_INT >= VERSION_CODES.O) 
+			channels.init(nm)
 	}
 
 	private fun process(tag: String?, id: Int, n: Notification) {
 		cache.put(id, n)
 		// mWeChatTargetingO
 		// cache
-		Log.d(TAG, "channel: ${n.channelId}")
+		if (SDK_INT >= VERSION_CODES.O)
+			Log.d(TAG, "channel: ${n.channelId}")
 		// emoji
 		// channel
 		n.color = PRIMARY_COLOR
@@ -125,7 +125,7 @@ object HookWeChat {
 		} else {
 			messages.process(id, n) // TODO
 		}
-		if (SDK_INT >= N && actions.size > 0)
+		if (SDK_INT >= VERSION_CODES.N && actions.size > 0)
 			n.actions = actions.toTypedArray()
 		
 		// 显示图片

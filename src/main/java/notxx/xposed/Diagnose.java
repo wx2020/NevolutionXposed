@@ -14,7 +14,7 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 // 诊断回调
 public interface Diagnose {
-	static final String TAG = "WeChatDecorator.Diagnose";
+	static final String TAG = "WeChat.Diagnose";
 
 	// 诊断钩子
 	public static void hook(XC_LoadPackage.LoadPackageParam loadPackageParam, String targetClassName, Diagnose diagnose) {

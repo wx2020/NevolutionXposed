@@ -45,9 +45,6 @@ import androidx.core.app.NotificationCompat.MessagingStyle;
 import androidx.core.graphics.drawable.IconCompat;
 
 import static android.os.Build.VERSION.SDK_INT;
-import static android.os.Build.VERSION_CODES.N;
-import static android.os.Build.VERSION_CODES.O;
-import static android.os.Build.VERSION_CODES.P;
 
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedBridge;
@@ -198,7 +195,11 @@ public class WeChatDecorator extends NevoDecoratorService {
 						// 撤回
 						// Log.d(TAG, matcher.group(0) + ", " + matcher.group(1) + ", " + matcher.group(2) + ", " + matcher.group(3));
 						is_recall = true;
-						recaller = matcher.group("recaller");
+						if (SDK_INT >= VERSION_CODES.O) { // named group requires higher api level
+							recaller = matcher.group("recaller");
+						} else {
+							recaller = matcher.group(2);
+						}
 						extras.putBoolean(EXTRA_RECALL, true);
 						extras.putString(EXTRA_RECALLER, recaller);
 						if (BuildConfig.DEBUG) Log.d(TAG, "recaller " + recaller);
@@ -262,7 +263,7 @@ public class WeChatDecorator extends NevoDecoratorService {
 			if (extras.containsKey(EXTRA_PICTURE_PATH)) {
 				String path = extras.getString(EXTRA_PICTURE_PATH);
 				final BitmapFactory.Options options = new BitmapFactory.Options();
-				options.inPreferredConfig = SDK_INT >= O ? Bitmap.Config.HARDWARE : Bitmap.Config.ARGB_8888;
+				options.inPreferredConfig = SDK_INT >= VERSION_CODES.O ? Bitmap.Config.HARDWARE : Bitmap.Config.ARGB_8888;
 				extras.putString(Notification.EXTRA_TEMPLATE, TEMPLATE_BIG_PICTURE);
 				extras.putParcelable(Notification.EXTRA_PICTURE, BitmapFactory.decodeFile(path, options));
 				// extras.putCharSequence(Notification.EXTRA_SUMMARY_TEXT, text);
@@ -273,27 +274,28 @@ public class WeChatDecorator extends NevoDecoratorService {
 			if (SDK_INT >= VERSION_CODES.N && extras.getCharSequenceArray(Notification.EXTRA_REMOTE_INPUT_HISTORY) != null)
 				n.flags |= Notification.FLAG_ONLY_ALERT_ONCE;		// No more alert for direct-replied notification.
 
-			// 维护NotificationChannel
-			channel_id = n.getChannelId();
-			if (channel_id != null) { // 确保NotificationChannel存在
-				NotificationChannel channel = nm.getNotificationChannel(channel_id);
-				if (BuildConfig.DEBUG) Log.d(TAG, channel_id + " " + channel);
-				if (channel != null) return Decorating.Processed;
-				switch (channel_id) {
-					case CHANNEL_GROUP_CONVERSATION:
-					channel = makeChannel(CHANNEL_GROUP_CONVERSATION, channelGroupMessage, false);
-					break;
-					case CHANNEL_MESSAGE:
-					channel = migrate(nm, OLD_CHANNEL_MESSAGE,	CHANNEL_MESSAGE,	channelMessage, false);
-					break;
-					case CHANNEL_MISC:
-					channel = migrate(nm, OLD_CHANNEL_MISC,		CHANNEL_MISC,		channelMisc, true);
-					break;
+			if (SDK_INT >= VERSION_CODES.O) { // 维护NotificationChannel
+				channel_id = n.getChannelId();
+				if (channel_id != null) { // 确保NotificationChannel存在
+					NotificationChannel channel = nm.getNotificationChannel(channel_id);
+					if (BuildConfig.DEBUG) Log.d(TAG, channel_id + " " + channel);
+					if (channel != null) return Decorating.Processed;
+					switch (channel_id) {
+						case CHANNEL_GROUP_CONVERSATION:
+						channel = makeChannel(CHANNEL_GROUP_CONVERSATION, channelGroupMessage, false);
+						break;
+						case CHANNEL_MESSAGE:
+						channel = migrate(nm, OLD_CHANNEL_MESSAGE,	CHANNEL_MESSAGE,	channelMessage, false);
+						break;
+						case CHANNEL_MISC:
+						channel = migrate(nm, OLD_CHANNEL_MISC,		CHANNEL_MISC,		channelMisc, true);
+						break;
+					}
+					if (BuildConfig.DEBUG) Log.d(TAG, channel_id + " " + channel);
+					nm.createNotificationChannel(channel);
+					channel = nm.getNotificationChannel(channel_id);
+					if (BuildConfig.DEBUG) Log.d(TAG, channel_id + " " + channel);
 				}
-				if (BuildConfig.DEBUG) Log.d(TAG, channel_id + " " + channel);
-				nm.createNotificationChannel(channel);
-				channel = nm.getNotificationChannel(channel_id);
-				if (BuildConfig.DEBUG) Log.d(TAG, channel_id + " " + channel);
 			}
 
 			return Decorating.Processed;
