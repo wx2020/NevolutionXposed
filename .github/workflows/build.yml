@@ -39,13 +39,11 @@ jobs:
         BUILD_TOOLS_VERSION: "34.0.0"
     - name: Get Short SHA
       id: short
-      run: |
-        echo "sha7=$(echo ${{github.sha}} | cut -c1-7)"
-        echo "sha7=$(echo ${{github.sha}} | cut -c1-7)" >> $GITHUB_OUTPUT
+      run: echo "sha7=$(echo ${{github.sha}} | cut -c1-7)" >> "$GITHUB_OUTPUT"
     - name: Upload Release
       uses: actions/upload-artifact@v4
       with:
-        name: NevolutionXposed_${{github.ref_name}}_${{steps.short.output.sha7}}.apk
+        name: NevolutionXposed_${{github.ref_name}}_${{steps.short.outputs.sha7}}.apk
         path: ${{steps.sign_app.outputs.signedReleaseFile}}
     - name: Prepare Release
       run: mv ${{steps.sign_app.outputs.signedReleaseFile}} NevolutionXposed_${{github.ref_name}}.apk
