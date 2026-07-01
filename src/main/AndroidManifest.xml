@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-	package="com.oasisfeng.nevo.xposed">
+	package="com.nevolution.xposed">
 
 	<application
 		android:allowBackup="true"
@@ -14,7 +14,7 @@
 			android:value="true" />
 		<meta-data
 			android:name="xposeddescription"
-			android:value="通过xposed实现nevolution，希望可以解决持续性通知无法修改、微信通知替换有延迟和某些系统下服务不够稳定（被杀）的问题" />
+			android:value="通过 Xposed 实现 Nevolution, 为 WeChat 优化通知显示。" />
 		<meta-data
 			android:name="xposedminversion"
 			android:value="54" />
