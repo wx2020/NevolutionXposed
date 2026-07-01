@@ -21,6 +21,7 @@ import notxx.wechat.Proxy
 import notxx.wechat.RecastAction
 import notxx.wechat.title
 import notxx.wechat.isRecast
+import notxx.wechat.text
 import notxx.xposed.hook.Auto as ForAuto
 import notxx.xposed.hook.FileOutputStream as ForFileOutputStream
 
@@ -57,7 +58,7 @@ object HookWeChat {
 			if (n != null) {
 				action(n)
 				n.isRecast = true
-				Log.d(TAG, "recast $id ${n.title}")
+				Log.d(TAG, "recast $id ${n.text} ${n.title}")
 				nm.notify(null, id, n)
 			} else {
 				Log.d(TAG, "can not recast $id, so cancel it")
@@ -106,6 +107,7 @@ object HookWeChat {
 	}
 
 	private fun process(tag: String?, id: Int, n: Notification) {
+		Log.d(TAG, "process: $tag")
 		cache.put(id, n)
 		// mWeChatTargetingO
 		// cache
@@ -117,13 +119,14 @@ object HookWeChat {
 		val actions = mutableListOf<Action>()
 		// 更新会话
 		val conversation = messages.conversation(n)
+		Log.d(TAG, "conversation: ${conversation != null} unread: ${conversation?.messages?.size ?: -1}")
 		if (n.isRecast == true) {
 			messages.recast(id, n, conversation)
 		} else if (conversation != null) {
 			messages.process(id, n, conversation)
 			proxy.process(id, n, conversation, actions)
 		} else {
-			messages.process(id, n) // TODO
+			messages.process(id, n)  // No CarExtender (newer WeChat): build MessagingStyle from tickerText/text/title.
 		}
 		if (SDK_INT >= VERSION_CODES.N && actions.size > 0)
 			n.actions = actions.toTypedArray()

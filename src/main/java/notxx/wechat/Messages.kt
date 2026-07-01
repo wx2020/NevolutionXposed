@@ -49,9 +49,9 @@ class Messages {
 
 	private fun process_internal(n: Notification) {
 		val tickerText = n.tickerText; val text = n.text; val title = n.title
+		Log.d(TAG, "0?? tickerText: $tickerText text: $text title: $title")
 		if (text == null || title == null) {
 			// ??
-			Log.d(TAG, "0?? tickerText: $tickerText text: $text title: $title")
 		} else if (tickerText == null) { // 撤回？
 			n.type = MessageType.RECALL
 			val recall_match = RECALL_REGEX.find(text)
@@ -89,11 +89,11 @@ class Messages {
 					n.person = r[0]
 					n.content = r[1]
 				}
-			} else if ("$title$SENDER_SEPARATOR$text" == tickerText) { // 第一条私信 or 公众号/服务号
-				// n.type = MessageType.PRIVATE_MESSAGE
-				n.person = title
-				// n.content = text
-			} else {
+} else if ("$title$SENDER_SEPARATOR$text" == tickerText) { // 第一条私信 or 公众号/服务号
+			// n.type = MessageType.PRIVATE_MESSAGE
+			n.person = title
+			n.content = text
+		} else {
 				Log.d(TAG, "2?？")
 			}
 			parse_unread(n, text)
@@ -119,7 +119,7 @@ class Messages {
 	@RequiresApi(VERSION_CODES.P)
 	private fun export_conversation(extras: Bundle, participant: Person, thread: List<Crumb>, lines: List<Line>) {
 		@Suppress("DEPRECATION")
-		extras.putCharSequence(EXTRA_SELF_DISPLAY_NAME, participant.name)
+		extras.putCharSequence(EXTRA_SELF_DISPLAY_NAME, "你")
 		// Log.d(TAG, "participantPerson $participantPerson ${participantPerson.name}")
 		if (SDK_INT >= VERSION_CODES.P) extras.putParcelable(Notification.EXTRA_MESSAGING_PERSON, participant); // Not included in NotificationCompat
 		extras.putCharSequence(EXTRA_CONVERSATION_TITLE, participant.name);
@@ -133,6 +133,22 @@ class Messages {
 		extras.putString(EXTRA_TEMPLATE, MessagingStyle::class.java.name)
 	}
 
+	@RequiresApi(VERSION_CODES.P)
+	private fun export_full_conversation(extras: Bundle, participant: Person, thread: List<Crumb>) {
+		@Suppress("DEPRECATION")
+		extras.putCharSequence(EXTRA_SELF_DISPLAY_NAME, "你")
+		extras.putParcelable(Notification.EXTRA_MESSAGING_PERSON, participant)
+		extras.putCharSequence(EXTRA_CONVERSATION_TITLE, participant.name)
+		if (!thread.isEmpty()) {
+			val out = mutableListOf<Parcelable>()
+			thread.forEach { it.export(Pair(it.senderName?.toString(), it.content?.toString() ?: ""), out) }
+			extras.putParcelableArray(EXTRA_MESSAGES, out.toTypedArray())
+		}
+		val first = thread.find { it.senderName != participant.name }
+		if (first != null) extras.isGroupConversation = true
+		extras.putString(EXTRA_TEMPLATE, MessagingStyle::class.java.name)
+	}
+
 	fun conversation(n: Notification): UnreadConversation? {
 		val extender = Notification.CarExtender(n)
 		return extender.unreadConversation
@@ -140,6 +156,7 @@ class Messages {
 	}
 
 	fun recast(id: Int, n: Notification, c: UnreadConversation?) {
+
 		var thread = threadCache.get(id)
 		if (thread == null) {
 			Log.d(TAG, "$id null thread")
@@ -169,6 +186,45 @@ class Messages {
 
 	fun process(id: Int, n: Notification) {
 		process_internal(n)
+		if (n.type == null) return  // process_internal failed to classify
+		val participantCs = n.title ?: return
+		val participant = participantCs.toString()
+		var thread = threadCache.get(id)
+		if (thread == null) {
+			thread = mutableListOf<Crumb>()
+			threadCache.put(id, thread)
+		}
+		val timestamp = if (n.`when` > 0) n.`when` else System.currentTimeMillis()
+		// We only see the latest message in this path (no UnreadConversation gives us the list).
+		val senderName = n.person ?: participantCs
+		val content = n.content ?: n.tickerText ?: n.text ?: return
+		val line: Line = Pair(senderName?.toString(), content.toString())
+		synchronized(thread) {
+			if (n.type == MessageType.RECALL) {
+				val crumb = Crumb(timestamp, n)
+				crumb.isRecall = true
+				crumb.content = n.content ?: "撤回一条消息"
+				thread.add(crumb)
+				Log.d(TAG, "add(recall) ${crumb.senderName} ${crumb.content} (thread=${thread.size})")
+			} else {
+				val crumb = Crumb(timestamp, n)
+				thread.add(crumb)
+				if (SDK_INT >= VERSION_CODES.P)
+					crumb.senderPerson = find_person(line.first ?: participant)
+				if (line.second != "[消息]") crumb.content = line.second
+				Log.d(TAG, "add(...) ${crumb.senderName} ${crumb.content} (thread=${thread.size})")
+			}
+			while (thread.size > THREAD_MAX) thread.removeAt(0)
+		}
+		if (SDK_INT >= VERSION_CODES.P) {
+			val participantPerson = find_person(participant, { it?.icon == null }, {
+				Person.Builder().setIcon(n.getLargeIcon()).setName(participant).build()
+			})
+			// No UnreadConversation: export the entire thread instead of aligning to `lines`
+			// (which only carries the latest message here).
+			export_full_conversation(n.extras, participantPerson, thread)
+		}
+		n.text = n.tickerText  // TODO
 	}
 
 	fun process(id: Int, n: Notification, c: UnreadConversation) {
