@@ -1,7 +1,6 @@
 package notxx.wechat
 
 import android.app.Notification
-import android.app.Notification.MessagingStyle.Message
 import android.app.Notification.EXTRA_IS_GROUP_CONVERSATION
 import android.app.Notification.EXTRA_REMOTE_INPUT_HISTORY
 import android.app.Notification.EXTRA_TEXT
@@ -11,15 +10,9 @@ import android.os.Bundle
 import notxx.xposed.getAdditional
 import notxx.xposed.setAdditional
 
-const val ACTION_READ = "READ"
-const val ACTION_REPLY = "REPLY"
-const val ACTION_ZOOM = "ZOOM"
 const val CHANNEL_NEW_MESSAGE = "message_channel_new_id"
 const val CHANNEL_GROUP_MESSAGE = "message_channel_group_message"
 const val CHANNEL_PRIVATE_MESSAGE = "message_channel_private_message"
-const val EXTRA_READ_ACTION = "read_pending_intent"
-const val EXTRA_REPLY_ACTION = "pending_intent"
-const val EXTRA_RESULT_KEY = "result_key"
 const val KEY_TEXT = "text"
 const val KEY_TIMESTAMP = "time"
 const val KEY_SENDER = "sender"
@@ -27,8 +20,6 @@ const val KEY_SENDER_PERSON = "sender_person"
 const val KEY_DATA_MIME_TYPE = "type"
 const val KEY_DATA_URI= "uri"
 const val KEY_EXTRAS_BUNDLE = "extras"
-const val KEY_USERNAME = "key_username"
-const val SCHEME_ID = "id"
 
 // Notification extensions
 var Notification.text
@@ -52,9 +43,6 @@ var Notification.person: CharSequence?
 var Notification.content: CharSequence?
 	get() = this.getAdditional<CharSequence>("content")
 	set(value) { this.setAdditional<CharSequence>("content", value) }
-var Notification.isRecast: Boolean?
-	get() = this.getAdditional<Boolean>("isRecast")
-	set(value) { this.setAdditional<Boolean>("isRecast", value) }
 
 // Bundle extensions
 var Bundle.isGroupConversation: Boolean

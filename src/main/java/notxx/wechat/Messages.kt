@@ -1,9 +1,6 @@
 package notxx.wechat
 
 import android.app.Notification
-import android.app.Notification.CarExtender.UnreadConversation
-import android.app.Notification.MessagingStyle
-import android.app.Notification.MessagingStyle.Message
 import android.app.Notification.EXTRA_CONVERSATION_TITLE
 import android.app.Notification.EXTRA_MESSAGES
 import android.app.Notification.EXTRA_SELF_DISPLAY_NAME
@@ -18,8 +15,6 @@ import android.util.Log
 import android.util.LruCache
 
 import androidx.annotation.RequiresApi
-
-import java.util.SortedMap
 
 private const val TAG = "WeChat.Messages"
 private const val SENDER_SEPARATOR = ": "
@@ -117,23 +112,6 @@ class Messages {
 	}
 
 	@RequiresApi(VERSION_CODES.P)
-	private fun export_conversation(extras: Bundle, participant: Person, thread: List<Crumb>, lines: List<Line>) {
-		@Suppress("DEPRECATION")
-		extras.putCharSequence(EXTRA_SELF_DISPLAY_NAME, "你")
-		// Log.d(TAG, "participantPerson $participantPerson ${participantPerson.name}")
-		if (SDK_INT >= VERSION_CODES.P) extras.putParcelable(Notification.EXTRA_MESSAGING_PERSON, participant); // Not included in NotificationCompat
-		extras.putCharSequence(EXTRA_CONVERSATION_TITLE, participant.name);
-		// Log.d(TAG, "thread ${thread.size}")
-		if (!thread.isEmpty()) extras.putParcelableArray(EXTRA_MESSAGES, thread.toParcelableArray(lines))
-		//if (! mHistoricMessages.isEmpty()) extras.putParcelableArray(Notification.EXTRA_HISTORIC_MESSAGES, MessagingBuilder.getBundleArrayForMessages(mHistoricMessages))
-		val first = thread.find() { crumb ->
-			crumb.senderName != participant.name
-		}
-		if (first != null) extras.isGroupConversation = true
-		extras.putString(EXTRA_TEMPLATE, MessagingStyle::class.java.name)
-	}
-
-	@RequiresApi(VERSION_CODES.P)
 	private fun export_full_conversation(extras: Bundle, participant: Person, thread: List<Crumb>) {
 		@Suppress("DEPRECATION")
 		extras.putCharSequence(EXTRA_SELF_DISPLAY_NAME, "你")
@@ -146,42 +124,7 @@ class Messages {
 		}
 		val first = thread.find { it.senderName != participant.name }
 		if (first != null) extras.isGroupConversation = true
-		extras.putString(EXTRA_TEMPLATE, MessagingStyle::class.java.name)
-	}
-
-	fun conversation(n: Notification): UnreadConversation? {
-		val extender = Notification.CarExtender(n)
-		return extender.unreadConversation
-		// return n.extras.getBundle("android.car.EXTENSIONS") != null
-	}
-
-	fun recast(id: Int, n: Notification, c: UnreadConversation?) {
-
-		var thread = threadCache.get(id)
-		if (thread == null) {
-			Log.d(TAG, "$id null thread")
-			return
-		}
-		if (c == null) {
-			Log.d(TAG, "$id null conversation")
-			return
-		}
-		val lines = c.messages.map { message -> message.toLine() }
-		val crumb = thread.last()
-		val remoteInputHistory = crumb.remoteInputHistory
-		crumb.remoteInputHistory = if (remoteInputHistory != null) {
-			remoteInputHistory + n.remoteInputHistory
-		} else {
-			n.remoteInputHistory
-		}
-		Log.d(TAG, "recast(...) ${crumb.senderName} ${crumb.content}")
-		val participant = c.participant
-		if (SDK_INT >= VERSION_CODES.P) { // TODO
-			val participantPerson = find_person(participant, { it?.icon == null }, {
-				Person.Builder().setIcon(n.getLargeIcon()).setName(participant).build()
-			})
-			export_conversation(n.extras, participantPerson, thread, lines)
-		}
+		extras.putString(EXTRA_TEMPLATE, Notification.MessagingStyle::class.java.name)
 	}
 
 	fun process(id: Int, n: Notification) {
@@ -195,7 +138,6 @@ class Messages {
 			threadCache.put(id, thread)
 		}
 		val timestamp = if (n.`when` > 0) n.`when` else System.currentTimeMillis()
-		// We only see the latest message in this path (no UnreadConversation gives us the list).
 		val senderName = n.person ?: participantCs
 		val content = n.content ?: n.tickerText ?: n.text ?: return
 		val line: Line = Pair(senderName?.toString(), content.toString())
@@ -224,84 +166,6 @@ class Messages {
 			// (which only carries the latest message here).
 			export_full_conversation(n.extras, participantPerson, thread)
 		}
-		n.text = n.tickerText  // TODO
-	}
-
-	fun process(id: Int, n: Notification, c: UnreadConversation) {
-		// Log.d(TAG, "n.extras ${n.extras}")
-		// TODO 如果消息发太快会造成 UnreadConversation 中未读消息来的比 Notification 快，需要更狠的活来修复
-		process_internal(n)
-		// Log.d(TAG, "c.latestTimestamp ${c.latestTimestamp}")
-		val timestamp = c.latestTimestamp
-		// Log.d(TAG, "c.participant ${c.participant}")
-		val participant = c.participant
-		var thread = threadCache.get(id)
-		if (thread == null) {
-			thread = mutableListOf<Crumb>()
-			threadCache.put(id, thread)
-		}
-		val lines = c.messages.map { message -> message.toLine() }
-		val threadCount = thread.size; val lineCount = lines.size
-		// Log.d(TAG, "threadCount/lineCount ${threadCount}/${lineCount}")
-		if (n.type == MessageType.RECALL) { // 当撤回发生的时候，messages会变得很短
-			// val recaller = n.person
-			val offset = threadCount - lineCount
-			// Log.d(TAG, "recall $offset $threadCount $lineCount")
-			if (offset < 0) {
-				thread.forEachIndexed { i, crumb ->
-					val j = i - offset
-					val line = lines[j]
-					// Log.d(TAG, "$i $j ${crumb.senderName} ${crumb.content} $line")
-					if (line.second == "[消息]" && line.first == null || line.first == participant) { // 撤回 TODO
-						// Log.d(TAG, "recall? ${line.first} $participant")
-						crumb.isRecall = true
-					}
-				}
-			} else {
-				lines.forEachIndexed { j, line ->
-					val i = j + offset
-					val crumb = thread[i]
-					// Log.d(TAG, "$i $j ${crumb.senderName} ${crumb.content} $line")
-					if (line.second == "[消息]" && line.first == null || line.first == participant) { // 撤回 TODO
-						// Log.d(TAG, "recall? ${line.first} $participant")
-						crumb.isRecall = true
-					}
-				}
-			}
-		}
-		// Log.d(TAG, "counts@0: $messageCount, $threadCount")
-		synchronized(thread) {
-			if (lineCount <= threadCount) return@synchronized
-			// 补齐历史
-			for (i in 0..(lineCount - threadCount - 2)) {
-				val line = lines[i]
-				val crumb = Crumb(timestamp, line, participant)
-				// Log.d(TAG, "add($i, ...) $line ${crumb.senderName} ${crumb.content}")
-				thread.add(i, crumb)
-			}
-		}
-		if (n.type != MessageType.RECALL) { // 不是撤回，补齐最后一条消息
-			var last_line = lines.last()
-			var crumb = Crumb(timestamp, n)
-			thread.add(crumb) // 添加历史记录
-			// Log.d(TAG, "add(...) ${crumb.senderName} ${crumb.content}")
-			if (SDK_INT >= VERSION_CODES.P) // TODO
-				crumb.senderPerson = find_person(last_line.first ?: participant)
-			if (last_line.second != "[消息]") {
-				crumb.content = last_line.second
-			}
-			Log.d(TAG, "add(...) $last_line ${crumb.senderName} ${crumb.content}")
-			// Log.d(TAG, "counts@1: ${lines.size}, ${thread.size}")
-		}
-		while (thread.size > THREAD_MAX) thread.removeAt(0)
-		// Log.d(TAG, "counts@2: ${messages.size}, ${thread.size}")
-		if (SDK_INT >= VERSION_CODES.P) { // TODO
-			val participantPerson = find_person(participant, { it?.icon == null }, {
-				Person.Builder().setIcon(n.getLargeIcon()).setName(participant).build()
-			})
-			export_conversation(n.extras, participantPerson, thread, lines)
-		}
-		n.text = n.tickerText // TODO
 	}
 }
 
@@ -332,19 +196,6 @@ class Crumb {
 		this.remoteInputHistory = n.remoteInputHistory
 		this.senderName = n.person
 		this.content = null
-		// this.message = null
-	}
-
-	constructor(timestamp: Long, line: Line, name: CharSequence) {
-		this.timestamp = timestamp
-		this.type = null
-		this.title = null
-		this.tickerText = null
-		this.text = null
-		// this.line = line
-		this.remoteInputHistory = null
-		this.senderName = line.first
-		this.content = line.second
 		// this.message = null
 	}
 
@@ -402,23 +253,3 @@ fun CharSequence.underline(): SpannableString {
 	return s
 }
 
-// String extensions
-fun String.toLine(): Pair<String?, String> {
-	val r = this.split(SENDER_SEPARATOR, ignoreCase = false, limit = 2)
-	return if (r.size == 2) {
-		Pair(r[0], r[1])
-	} else {
-		Pair(null, this)
-	}
-}
-
-fun List<Crumb>.toParcelableArray(lines: List<Line>): Array<Parcelable> {
-	val result = mutableListOf<Parcelable>()
-	val offset = this.size - lines.size
-	// Log.d(TAG, "recall $offset $threadCount $lineCount")
-	lines.forEachIndexed { i, line ->
-		val crumb = this[i + offset]
-		crumb.export(line, result)
-	}
-	return result.toTypedArray()
-}
