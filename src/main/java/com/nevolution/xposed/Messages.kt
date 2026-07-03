@@ -108,6 +108,16 @@ class Messages {
                 n.content = text
             } else {
                 Log.d(TAG, "2?？")
+                // 尝试从 tickerText 解析发送者与内容
+                val r = tickerText.toString().split(SENDER_SEPARATOR, ignoreCase = false, limit = 2)
+                if (r.size == 2) {
+                    n.person = r[0]
+                    n.content = r[1]
+                } else {
+                    // ticker 不含发送者前缀，整体作为内容
+                    n.person = title
+                    n.content = tickerText
+                }
             }
             parse_unread(n, text)
         }
